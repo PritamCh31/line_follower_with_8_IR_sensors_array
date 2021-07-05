@@ -1,0 +1,636 @@
+/*Deifining pins for accepting input for IR sensors */
+
+#define S1 A0    //pin A0 is defined as input pin for 1st sensor(counting from left side)
+#define S2 A1    //pin A1 is defined as input pin for 2nd sensor(counting from left side)
+#define S3 A2    //pin A2 is defined as input pin for 3rd sensor(counting from left side)
+#define S4 A4    //pin A4 is defined as input pin for 4th sensor(counting from left side)
+#define S5 A5    //pin A5 is defined as input pin for 5th sensor(counting from left side)
+#define S6 2     //pin 2 is defined as input pin for 6th sensor(counting from left side)
+#define S7 3     //pin 3 is defined as input pin for 7th sensor(counting from left side)
+#define S8 4     //pin 4 is defined as input pin for 8th sensor(counting from left side)
+
+/*Initializing IR sensor reading input variables */
+
+int s1 = 0; // stores the input value of 1st(S1) sensor
+int s2 = 0; // stores the input value of 2nd(S2) sensor
+int s3 = 0; // stores the input value of 3rd(S3) sensor
+int s4 = 0; // stores the input value of 4th(S4) sensor
+int s5 = 0; // stores the input value of 5th(S5) sensor
+int s6 = 0; // stores the input value of 6th(S6) sensor
+int s7 = 0; // stores the input value of 7th(S7) sensor
+int s8 = 0; // stores the input value of 8th(S8) sensor
+
+/*Defining output pins for Left and Right motors and PWM signals*/
+
+#define InL1 5 // output 1 for left motor
+#define InL2 6 // output 2 for left motor
+#define EnA 7 // PWM pulse for left motor
+#define InR1 8 // output 1 for right motor
+#define InR2 9 // output 2 for right motor
+#define EnB 10 // PWM pulse fot right motor
+
+char ch = 0;   //charecter variable to take destination input from user
+
+int pwm_L = 0;  // PWM pulse of left motor is initialized as 0
+int pwm_R = 0;  // PWM pulse of right motor motor is initialized as 0
+
+int i = 0;  // this is just a counter variable.
+
+char adress = 0X01;
+
+void setup(){
+
+  Serial.begin(9600);
+  Serial.flush();
+  
+  pinMode(InL1, OUTPUT);
+  pinMode(InL2, OUTPUT);
+  pinMode(EnA, OUTPUT);
+  pinMode(InR1, OUTPUT);
+  pinMode(InR2, OUTPUT);
+  pinMode(EnB, OUTPUT);
+  
+  pinMode(S1, INPUT);
+  pinMode(S2, INPUT);
+  pinMode(S3, INPUT);
+  pinMode(S4, INPUT);
+  pinMode(S5, INPUT);
+  pinMode(S6, INPUT);
+  pinMode(S7, INPUT);
+  pinMode(S8, INPUT);
+}
+
+void sendCommand(char command, char data){
+
+  char checksum = adress + command + data;
+  Serial.write(adress);
+  Serial.write(command);
+  Serial.write(data);
+  Serial.write(checksum);
+}
+
+void go_straight(){
+
+  digitalWrite(InL1, HIGH);
+  digitalWrite(InL2, LOW);
+  for(pwm_L = 0; pwm_L <255; pwm_L +=10){
+    analogWrite(EnA, pwm_L); 
+  }
+  digitalWrite(InR1, HIGH);
+  digitalWrite(InR2, LOW);
+  for(pwm_L = 0; pwm_R <255; pwm_R +=10){
+    analogWrite(EnB, pwm_R);
+  }
+}
+
+void turn_left(){
+
+  digitalWrite(InL1, LOW);
+  digitalWrite(InL2, HIGH);
+  for(pwm_L = 0; pwm_L <255; pwm_L +=10){
+    analogWrite(EnA, pwm_L); 
+  }
+  digitalWrite(InR1, HIGH);
+  digitalWrite(InR2, LOW);
+  for(pwm_L = 0; pwm_R <255; pwm_R +=10){
+    analogWrite(EnB, pwm_R);
+  }
+}
+
+void turn_right(){
+
+  digitalWrite(InL1, HIGH);
+  digitalWrite(InL2, LOW);
+  for(pwm_L = 0; pwm_L <255; pwm_L +=10){
+    analogWrite(EnA, pwm_L); 
+  }
+  digitalWrite(InR1, LOW);
+  digitalWrite(InR2, HIGH);
+  for(pwm_L = 0; pwm_R <255; pwm_R +=10){
+    analogWrite(EnB, pwm_R);
+  }
+}
+
+void stop(){
+
+  digitalWrite(InL1, LOW);
+  digitalWrite(InL2, LOW);
+  analogWrite(EnA, 0); 
+  digitalWrite(InR1, LOW);
+  digitalWrite(InR2, LOW);
+  analogWrite(EnB, 0);
+}
+
+void one_inch(){     //the robot moves forward for 0.5 seconds
+
+  digitalWrite(InL1, HIGH);
+  digitalWrite(InL2, LOW);
+  for(pwm_L = 0; pwm_L <255; pwm_L +=10){
+    analogWrite(EnA, pwm_L); 
+  }
+  digitalWrite(InR1, HIGH);
+  digitalWrite(InR2, LOW);
+  for(pwm_L = 0; pwm_R <255; pwm_R +=10){
+    analogWrite(EnB, pwm_R);
+  }
+  delay(500);       //delay time value will be changed according to condition
+}
+
+void readSensors(){        //accepts digital inputs from sensors
+
+  s1 = digitalRead(S1);
+  s2 = digitalRead(S2);
+  s3 = digitalRead(S3);
+  s4 = digitalRead(S4);
+  s5 = digitalRead(S5);
+  s6 = digitalRead(S6);
+  s7 = digitalRead(S7);
+  s8 = digitalRead(S8);
+}
+
+void loop(){
+
+  char command, data;
+  command = 'X';
+  data = 0X00;
+  command = 'S';
+  data = 90;
+  command = 'B';
+  data = 0X05;
+  command = 'J';
+  data = 0X06;
+  command = 'T';
+  data = 0X05;
+  command = 'L';
+  data = 0X01;
+  command = 'D';
+  data = 0X01;
+  command = 'C';
+  data = 0X00;
+  sendCommand(command,data);
+
+  readSensors();
+
+//This for(;;) loop provides the choosing option again and again to the user everytime one action is executed.
+  
+  for(;;){
+  
+    Serial.print("\n Enter A to go to position A, \n Enter B to go to position B, \n Enter C to go to position C, \n Enter D to go to position D, \n Enter E to go to position E,\n Enter F to go to position F");
+    if (Serial.available() > 0){      //checks that if a charecter is available
+      ch = Serial.read();     // gets the charecter
+      
+      if (ch == 'A'){
+
+        Serial.print("The Robot is going to position A");
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            stop();
+            delay(1000);
+            Serial.print("\n The Robot has reached to position A");
+            Serial.print("\n The robot will now return to Robo-Base station");
+            turn_right();
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              go_straight();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+              turn_left();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+              turn_right();
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+                turn_right();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The robot has returned to Robo-base station");
+              }
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+          turn_left();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+          turn_right();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_right();
+          }
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_left();
+          }
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_left();
+          }
+        }
+        break;
+      }
+      
+      if (ch == 'B'){
+
+        Serial.print("The Robot is going to position B");
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            stop();
+            delay(1000);
+            Serial.print("\n The Robot has reached to position B");
+            turn_right();
+            Serial.print("\n The robot will now return to Robo-Base station");
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              go_straight();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+              turn_left();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+              turn_right();
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+                turn_left();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The robot has returned to Robo-base station");
+              }
+            }
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+          turn_left();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+          turn_right();
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_left();
+          }
+        }
+        if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            i++;
+            if (i == 2){
+              turn_right();
+            }
+            else{
+              go_straight();
+            }
+          }
+        }
+        break;        
+      }
+      if (ch == 'C'){
+
+        Serial.print("The Robot is going to position C");
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            stop();
+            delay(1000);
+            Serial.print("\n The Robot has reached to position C");
+            turn_right();
+            Serial.print("\n The Robot will now return to Robo-Base station");
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              go_straight();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+              turn_left();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+              turn_right();
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                turn_left();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The Robot has returned to Robo-base station");
+              }
+            }
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+                turn_right();
+              }
+            }
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+          turn_left();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 0 && s7 == 1 && s8 == 1){
+          turn_right();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_right();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_right();            
+          }
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_left();
+          }
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_right();
+          }
+        }
+        break;
+      }
+      
+      if (ch == 'D'){
+
+        Serial.print("The Robot is going to position D");
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            stop();
+            Serial.print("\n The Robot has reached to position D");
+            delay(1000);
+            Serial.print("\n The Robot will now return to Robo-Base station");
+            turn_right();
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              go_straight();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+              turn_left();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+              turn_right();
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                turn_left();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The Robot has returned to Robo-base station");
+              }
+            }
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+          turn_left();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+          turn_right();
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_left();
+          }
+        }
+        if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            i++;
+            if (i == 4){
+              turn_right();
+            }
+            else{
+              go_straight();
+            }
+          }
+        }
+        break;
+      }
+      
+      if (ch == 'E'){
+
+        Serial.print("The Robot is going to position E");
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            stop();
+            Serial.print("\n The Robot has reached to position E");
+            delay(1000);
+            Serial.print("\n The Robot will now return to Robo-Base station");
+            turn_right();
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              go_straight();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+              turn_left();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+              turn_right();
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The Robot has returned to Robo-Base station");
+              }
+            }
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+            }
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+          turn_left();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+          turn_right();
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+        }
+        break;
+      }
+      
+      if (ch == 'F'){
+
+        Serial.print("The Robot is going to position F");
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            stop();
+            Serial.print("\n The Robot has reached to position F");
+            delay(1000);
+            Serial.print("\n The Robot will now return to Robo-Base station");
+            turn_right();
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+              go_straight();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+              turn_left();
+            }
+            if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 1 && s7 == 0 && s8 == 1){
+              turn_right();
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The Robot has returned to Robo-Base station");
+              }
+            }
+            if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+                go_straight();
+              }
+              else if(s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+                stop();
+                Serial.print("\n The Robot has returned to Robo-base station");
+              }
+            }
+            if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+              one_inch();
+              if(s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+                turn_right();
+              }
+            }
+          }
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 0 && s4 == 0 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+          turn_left();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 0 && s6 == 0 && s7 == 1 && s8 == 1){
+          turn_right();
+        }
+        if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_right();
+          }
+          else if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_right();            
+          }
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 1 && s5 == 1 && s6 == 1 && s7 == 1 && s8 == 1){
+            turn_left();
+          }
+        }
+        if (s1 == 0 && s2 == 0 && s3 == 0 && s4 == 0 && s5 == 0 && s6 == 0 && s7 == 0 && s8 == 0){
+          one_inch();
+          if (s1 == 1 && s2 == 1 && s3 == 1 && s4 == 0 && s5 == 0 && s6 == 1 && s7 == 1 && s8 == 1){
+            go_straight();
+          }
+        }
+        break;
+      }
+    }
+  }
+}
