@@ -1,0 +1,2 @@
+# line_follower_with_8_IR_sensors_array
+This code is for a specially customized line follower robot for restaurant application. The robot uses an array of 8 IR sensors for line detection, magnetic encoders for PWM control and Arduinino Uno as microcontroller. The coding is done so that the robot can start from one place, go to specific tables for order and can return to the initial position following the shortest path available. The controlling of the robot is completely autonomous.
